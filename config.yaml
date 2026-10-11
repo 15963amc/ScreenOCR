@@ -1,0 +1,82 @@
+# =====================================================================
+# DSH 屏幕关键词识别 —— 配置文件
+# 用途：ADB 定时截图 + OCR 识别中文关键词（合规学习辅助）
+# 合规：验证码类关键词只用于识别并停止，绝不自动点击/填写/处理。
+# =====================================================================
+
+# ---- ADB ----------------------------------------------------------
+adb:
+  # Windows 示例；macOS/Linux 可改为 "adb" 或完整路径，如 /usr/local/bin/adb
+  path: "C:\\games\\platform-tools\\adb.exe"
+  remote_dir: "/sdcard"          # 设备端临时截图目录
+
+# ---- OCR ----------------------------------------------------------
+ocr:
+  engine: "rapidocr"             # rapidocr（默认，轻量）| paddleocr（可选）
+  min_confidence: 0.5            # 全局置信度阈值，低于此值的结果被丢弃
+
+# ---- 关键词（优先级固定：验证码类 > 下一节类 > 继续播放类）----------
+keywords:
+  captcha:                       # 验证码类：只识别并停止，绝不点击
+    enabled: true
+    words:
+      - 验证码
+      - 安全验证
+      - 人机验证
+      - 滑块验证
+      - 请完成验证
+      - 拖动滑块
+      - 行为验证
+  next:                          # 下一节类
+    enabled: true
+    words:
+      - 下一节
+      - 下一章
+      - 下一个
+      - 下一课
+      - 下一篇
+  continue:                      # 继续播放类
+    enabled: true
+    words:
+      - 继续播放
+      - 继续
+      - 开始播放
+    # 易误匹配词（如"播放"单独出现时容易误报），单独开关与更高阈值
+    ambiguous_words:
+      enabled: false             # 默认关闭，避免误匹配
+      words:
+        - 播放
+      min_confidence: 0.9        # 开启时需更高的置信度
+  signal:                        # 信号类：不作为点击目标，只作为状态信号
+    video_complete:              # 视频播放完成信号
+      enabled: true
+      words:
+        - 重播
+
+# ---- 匹配策略 ------------------------------------------------------
+match:
+  exact_first: true              # true: 精确匹配优先于包含匹配
+  enable_contains: true          # false: 只做精确匹配（禁用包含匹配）
+  max_text_length: 10            # contains 匹配仅对长度<=该值的 OCR 文本生效，避免正文长句误匹配
+
+# ---- 状态机 / 安全 ------------------------------------------------
+state:
+  consecutive_frames: 3          # 连续多少帧命中同一目标才确认（2~3 可调）
+  wait_after_click: 2            # 点击后等待秒数，再截图验证
+  click_cooldown: 5              # 同一目标点击冷却秒数，避免重复点击
+  center_tolerance: 30           # 判定"同一目标"的中心点距离阈值（像素）
+  reset_timeout: 15              # 目标消失超过该秒数则重置其连续计数
+  gated_keywords:                # 需要视频完成信号（如"重播"）才允许点击的关键词
+    - 下一篇
+
+# ---- 循环 ----------------------------------------------------------
+loop:
+  interval: 5                    # 循环截图间隔（秒），可被 --interval 覆盖
+
+# ---- 输出 ----------------------------------------------------------
+output:
+  capture_dir: "captures"        # 截图目录（时间戳命名）
+  log_dir: "logs"                # 日志目录
+  result_dir: "output"           # 结果输出目录
+  result_json: "latest_result.json"
+  annotated: true                # 是否生成 annotated 标注图（画出 OCR 框与匹配）

@@ -1,0 +1,11 @@
+# 核心依赖
+PyYAML>=6.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+rapidocr>=2.0.0
+onnxruntime>=1.16.0   # rapidocr 3.x 的推理引擎，需显式安装
+
+# ---- 可选：PaddleOCR（如需 ocr.engine: paddleocr，取消注释并安装）----
+# paddleocr>=2.7.0
+# paddlepaddle>=2.5.0
